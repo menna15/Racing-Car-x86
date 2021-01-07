@@ -429,8 +429,8 @@ curr_obstacle dw ?
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Power_ups Data ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-X_of_power_ups_arr dw ?,?,?
-Y_of_power_ups_arr dw ?,?,?
+X_of_power_ups_arr dw ?,?,?,?,?,?
+Y_of_power_ups_arr dw ?,?,?,?,?,?
 
  power1x dw ?
  power1y dw ?
@@ -443,6 +443,18 @@ Y_of_power_ups_arr dw ?,?,?
  power3x dw ?
  power3y dw ?
  power_up_3 dw 50 dup(?)
+
+ power4x dw ?
+ power4y dw ?
+ power_up_4 dw 50 dup(?)
+
+ power5x dw ?
+ power5y dw ?
+ power_up_5 dw 50 dup(?)
+
+ power6x dw ?
+ power6y dw ?
+ power_up_6 dw 50 dup(?)
 
  curr_power_up_x DW  ?
  curr_power_up_y DW  ?
@@ -2290,7 +2302,7 @@ Draw_Track PROC
    
    inc SI
    mov bx,dx
-   cmp bx,3
+   cmp bx,6
    jnz drawPowers
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2656,9 +2668,17 @@ mov SI, offset Y_of_power_ups_arr
    mov [SI],dx
    INC SI
 
+   mov dx,X_of_obstacles_arr[1]
+   sub dx,19
+   mov [DI],dx
+   inc DI
+   mov dx,Y_of_obstacles_arr[1]
+   add dx,23
+   mov [SI],dx
+   INC SI
 
    mov dx,X_of_obstacles_arr[2]
-   sub dx,19
+   sub dx,33
    mov [DI],dx
    inc DI
    mov dx,Y_of_obstacles_arr[2]
@@ -2673,6 +2693,33 @@ mov SI, offset Y_of_power_ups_arr
    mov dx,Y_of_obstacles_arr[3]
    sub dx,39
    mov [SI],dx
+
+   mov dx,X_of_obstacles_arr[4]
+   sub dx,43
+   mov [DI],dx
+   inc DI
+   mov dx,Y_of_obstacles_arr[4]
+   add dx,14
+   mov [SI],dx
+   INC SI
+
+   mov dx,X_of_obstacles_arr[5]
+   sub dx,24
+   mov [DI],dx
+   inc DI
+   mov dx,Y_of_obstacles_arr[5]
+   add dx,29
+   mov [SI],dx
+   INC SI
+
+   mov dx,X_of_obstacles_arr[6]
+   sub dx,11
+   mov [DI],dx
+   inc DI
+   mov dx,Y_of_obstacles_arr[6]
+   add dx,5
+   mov [SI],dx
+   INC SI
 
 ret
 CreatePowers ENDP
@@ -2737,6 +2784,12 @@ fill_power_up_buffers proc
                     je go2
             cmp power_up_num , 3
                     je go3
+            cmp power_up_num , 4
+                    je go4
+            cmp power_up_num , 5
+                    je go5
+            cmp power_up_num , 6
+                    je go6
 
             go1:
                   mov DI , offset power_up_1
@@ -2761,7 +2814,28 @@ fill_power_up_buffers proc
                   mov power3x,ax
 
                   mov ax,curr_power_up_y
-                  mov power3y,ax                                              
+                  mov power3y,ax
+            go4:
+                  mov di , offset power_up_4   
+                  mov ax,curr_power_up_x
+                  mov power4x,ax
+
+                  mov ax,curr_power_up_y
+                  mov power4y,ax
+            go5:
+                  mov di , offset power_up_5   
+                  mov ax,curr_power_up_x
+                  mov power5x,ax
+
+                  mov ax,curr_power_up_y
+                  mov power5y,ax
+            go6:
+                  mov di , offset power_up_6  
+                  mov ax,curr_power_up_x
+                  mov power6x,ax
+
+                  mov ax,curr_power_up_y
+                  mov power6y,ax                                              
            anything:
 
 
@@ -2791,7 +2865,7 @@ fill_power_up_buffers proc
 
                               ;  loop iteration in x direction
             cmp CX,6          ; compare cx with the width of the power ups+1
-	      JNZ filll1      	;  check if we can draw c urrent x and y and excape the y iteration
+	      JNZ filll1      	;  check if we can draw current x and y and excape the y iteration
 	      mov Cx, 0 	      ; if loop iteration in y direction, then x should start over so that we sweep the grid
 	      inc DX 	      ; loop iteration in y direction
             cmp dx,11         ; compare dx with the height of the powerUp+1
@@ -2816,6 +2890,12 @@ erase_power_ups PROC
                     je er2
             cmp power_up_num , 47
                     je er3
+            cmp power_up_num , 48
+                    je er4
+            cmp power_up_num , 49
+                    je er5
+            cmp power_up_num , 50
+                    je er6
 
             er1:
                   mov DI , offset power_up_1
@@ -2841,7 +2921,28 @@ erase_power_ups PROC
                   mov curr_power_up_x,ax
 
                   mov ax,power3y
-                  mov curr_power_up_y,ax                                              
+                  mov curr_power_up_y,ax
+            er4:
+                  mov di , offset power_up_4   
+                  mov ax,power4x
+                  mov curr_power_up_x,ax
+
+                  mov ax,power4y
+                  mov curr_power_up_y,ax  
+            er5:
+                  mov di , offset power_up_5   
+                  mov ax,power5x
+                  mov curr_power_up_x,ax
+
+                  mov ax,power5y
+                  mov curr_power_up_y,ax  
+            er6:
+                  mov di , offset power_up_6   
+                  mov ax,power6x
+                  mov curr_power_up_x,ax
+
+                  mov ax,power6y
+                  mov curr_power_up_y,ax                                                
 
 	erase_power_up:
             add cx,  curr_power_up_x
@@ -2887,6 +2988,12 @@ collect_power_up PROC
             jz remove
             cmp al ,47
             jz remove
+            cmp al ,48
+            jz remove
+            cmp al ,49
+            jz remove
+            cmp al ,50
+            jz remove
 
             mov cx , point2_CarOne_x
             mov dx , point2_CarOne_y
@@ -2898,6 +3005,12 @@ collect_power_up PROC
             jz remove
             cmp al ,47
             jz remove 
+            cmp al ,48
+            jz remove
+            cmp al ,49
+            jz remove
+            cmp al ,50
+            jz remove
 
             mov cx , point3_CarOne_x
             mov dx , point3_CarOne_y
@@ -2908,6 +3021,12 @@ collect_power_up PROC
             cmp al ,46
             jz remove 
             cmp al ,47
+            jz remove
+            cmp al ,48
+            jz remove
+            cmp al ,49
+            jz remove
+            cmp al ,50
             jz remove
 
 jmp collect2
@@ -2941,6 +3060,12 @@ collect2:
       jz remove2
       cmp al ,47
       jz remove2
+      cmp al ,48
+      jz remove2
+      cmp al ,49
+      jz remove2
+      cmp al ,50
+      jz remove2
 
       mov cx , point2_CarTwo_x
       mov dx , point2_CarTwo_y
@@ -2951,6 +3076,12 @@ collect2:
       cmp al ,46
       jz remove2
       cmp al ,47
+      jz remove2
+      cmp al ,48
+      jz remove2
+      cmp al ,49
+      jz remove2
+      cmp al ,50
       jz remove2 
 
       mov cx , point3_CarTwo_x
@@ -2962,6 +3093,12 @@ collect2:
       cmp al ,46
       jz remove2 
       cmp al ,47
+      jz remove2
+      cmp al ,48
+      jz remove2
+      cmp al ,49
+      jz remove2
+      cmp al ,50
       jz remove2
 
 ret

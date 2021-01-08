@@ -494,6 +494,9 @@ car_one_color db 0
 red_car_color              db ?
 black_car_color            db ?
 
+car_one_speed db 0
+car_one_max_speed db 2
+car_one_min_speed db 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Car Two Data ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 car_two_width  dw 27
@@ -519,6 +522,11 @@ Score_CarTwo db 48 ,'$'
 
 car_two_mode  dw 3
 car_two_color db 2
+
+
+car_two_speed db 0
+car_two_max_speed db 2
+car_two_min_speed db 0
 
 ;------------------------------------------------------
 .CODE
@@ -763,6 +771,10 @@ jmp mainloop
 changeMode: 
       mov ah,0 
       int 16h
+      cmp ah , 72
+            je UP
+       cmp ah , 80
+            je Down      
       cmp ah, 77  ; right arrow
             je right 
       cmp ah , 75 ; left arrow
@@ -772,7 +784,8 @@ changeMode:
       cmp ah ,30  ; a char 
             je A 
       cmp ah, 3eh ; scan code of f4 To Exit Game 
-            je temp_Label_game_ended1
+            je temp_Label_game_ended1  
+                
       jmp mainloop
       right: 
             mov ax ,car_one_mode 
@@ -802,6 +815,18 @@ changeMode:
             dec ax 
             mov car_two_mode,ax  
             jmp mainloop
+      UP:
+            inc car_one_speed           
+            mov al , car_one_speed
+            cmp al , car_one_max_speed
+            jg fix_up
+            jmp mainloop
+      Down:
+            dec car_one_speed
+            mov al , car_one_speed
+            cmp al , 0ffh
+            je fix_down
+            jmp mainloop           
 
       temp_Label_game_ended1:
             jmp temp_Label_game_ended2
@@ -819,6 +844,18 @@ changeMode:
       jmp mainloop
       fix4: 
       mov car_two_mode,8
+      jmp mainloop
+      
+      fix_down:      
+      mov al , car_one_min_speed
+      mov car_one_speed , al
+      jmp mainloop
+
+      fix_up:
+      mov al , car_one_max_speed
+      mov car_one_speed , al
+      jmp mainloop
+
       ; jmp strt1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 mainloop: 
@@ -1128,7 +1165,9 @@ Mode1               PROC
       jz return1
       cmp al, bh
       jz return1
-      dec curr_car_one_y
+      mov al , car_one_speed
+      mov ah , 0
+      sub curr_car_one_y , ax   
       return1:ret
       ; second car
       m1_case2:
@@ -1222,8 +1261,10 @@ poof: mov ah ,0DH
       jz return2
       cmp al, bh
       jz return2
-      dec curr_car_one_y
-      inc curr_car_one_x
+      mov ah , 0
+      mov al , car_one_speed
+      sub curr_car_one_y , ax
+      add curr_car_one_x , ax
       return2:ret
       m2_case2:
       mov ah ,0DH
@@ -1332,7 +1373,9 @@ foop: mov ah ,0DH
       jz return3
       cmp al, bh
       jz return3
-      inc curr_car_one_x
+      mov ah , 0
+      mov al , car_one_speed
+      add curr_car_one_x , ax
       return3:ret
       m3_case2:
       mov ah ,0DH
@@ -1432,8 +1475,10 @@ blah: mov ah ,0DH
       jz return4
       cmp al, bh
       jz return4
-      inc curr_car_one_x
-      inc curr_car_one_y
+      mov ah , 0
+      mov al , car_one_speed
+      add curr_car_one_x , ax
+      add curr_car_one_y , ax
       return4:ret
 
       m4_case2:
@@ -1487,7 +1532,7 @@ Mode4               ENDP
 
 Mode5               PROC 
       cmp ah , 1 
-      jne m5_case2
+      jne lll
       mov ah ,0DH
 
       mov bl, red_car_color
@@ -1506,6 +1551,11 @@ Mode5               PROC
       mov point1_CarOne_y,DX
       mov point2_CarOne_y,DX
       mov point3_CarOne_y,DX
+      jmp lll2
+      lll:
+      jmp m5_case2
+      lll2:
+
       inc dx
       int 10H
       cmp al, backgroundColor
@@ -1530,7 +1580,9 @@ Mode5               PROC
       jz return5
       cmp al, bh
       jz return5
-      inc curr_car_one_y
+      mov ah , 0
+      mov al , car_one_speed
+      add curr_car_one_y , ax
       return5:ret
 
       m5_case2:
@@ -1628,8 +1680,10 @@ bla:  mov ah ,0DH
       jz return6
       cmp al, bh
       jz return6
-      dec curr_car_one_x       
-      inc curr_car_one_y
+      mov ah , 0
+      mov al , car_one_speed
+      sub curr_car_one_x , ax   
+      add curr_car_one_y , ax
       return6:ret
 
       m6_case2:
@@ -1725,7 +1779,9 @@ Mode7               PROC
       jz return7
       cmp al, bh
       jz return7
-      dec curr_car_one_x
+      mov ah , 0
+      mov al , car_one_speed
+      sub curr_car_one_x , ax
       return7:ret
 
       m7_case2:
@@ -1820,8 +1876,10 @@ foo:  mov ah, 0DH
       jz return8
       cmp al, bh
       jz return8
-      dec curr_car_one_x
-      dec curr_car_one_y
+      mov ah , 0
+      mov al , car_one_speed
+      sub curr_car_one_x ,ax
+      sub curr_car_one_y , ax
       return8:ret
 
       m8_case2:

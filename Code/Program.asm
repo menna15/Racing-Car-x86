@@ -467,11 +467,11 @@ Y_of_power_ups_arr dw ?,?,?,?,?,?
 car_one_width  dw 27
 car_one_height dw 27
 
-car_one_old_x              DW 110   ;initial x =  final line range 
+car_one_old_x              DW 100   ;initial x =  final line range 
 car_one_old_y              DW 170   ;initial y =  final line range
 
 curr_car_one_y              DW 170
-curr_car_one_x              DW 110
+curr_car_one_x              DW 100
 
 car1_buffer DB 27,27, 27 dup(27 dup(?))  ; used to save the area under car1 before we draw the car over it
 
@@ -499,11 +499,11 @@ black_car_color            db ?
 car_two_width  dw 27
 car_two_height dw 27
 
-car_two_old_x              DW 30
-car_two_old_y              DW 170
+car_two_old_x              DW 100
+car_two_old_y              DW 150
 
-car_two_x              DW 30
-car_two_y              DW 170
+car_two_x              DW 100
+car_two_y              DW 150
 
 car2_buffer DB 27,27, 27 dup(27 dup(?))  ; used to save the area under car2 beore we draw the car over it
 
@@ -960,9 +960,14 @@ mov cx , 0fffbh
 loooop1:
 loop loooop1
 
-inc Game_time
-mov cx,Game_time
-cmp cx,850
+; inc Game_time
+; mov cx,Game_time
+; cmp cx,850
+; jz game_ended
+; jmp mainloop
+
+call IsGameOver
+cmp bh, 1
 jz game_ended
 jmp mainloop
 
@@ -1029,6 +1034,54 @@ jmp endloop
 gameMode endp
 
 ; ------------------ Game Proceduers -------------
+;----------Is game over?-----------
+IsGameOver          proc
+            jmp fun
+            game_over1:
+            mov bh , 1h
+            add Score_CarOne, 5
+            ret
+            game_over2:
+            mov bh , 1h
+            add Score_CarTwo, 5
+            ret
+
+fun:        mov bh , 00h
+            mov ah ,0DH
+            mov cx, point1_CarOne_x
+            mov dx, point1_CarOne_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over1
+            mov cx, point2_CarOne_x
+            mov dx, point2_CarOne_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over1
+            mov cx, point3_CarOne_x
+            mov dx, point3_CarOne_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over1
+
+            mov cx, point1_CarTwo_x
+            mov dx, point1_CarTwo_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over2
+            mov cx, point2_CarTwo_x
+            mov dx, point2_CarTwo_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over2
+            mov cx, point3_CarTwo_x
+            mov dx, point3_CarTwo_y
+            int 10H
+            cmp al, 00 ; final line color
+            jz game_over2
+            ret
+
+IsGameOver          endp
 
 Mode1               PROC 
 
@@ -1584,7 +1637,7 @@ bla:  mov ah ,0DH
       mov cx, car_two_x
       add cx, 5
       mov point1_CarTwo_x,cx
-      mov dx, curr_car_one_y
+      mov dx, car_two_y
       add dx, 27
       mov point1_CarTwo_y,dx
       inc dx
@@ -2815,6 +2868,7 @@ fill_power_up_buffers proc
 
                   mov ax,curr_power_up_y
                   mov power3y,ax
+                  jmp anything
             go4:
                   mov di , offset power_up_4   
                   mov ax,curr_power_up_x
@@ -2822,6 +2876,7 @@ fill_power_up_buffers proc
 
                   mov ax,curr_power_up_y
                   mov power4y,ax
+                  jmp anything
             go5:
                   mov di , offset power_up_5   
                   mov ax,curr_power_up_x
@@ -2829,13 +2884,15 @@ fill_power_up_buffers proc
 
                   mov ax,curr_power_up_y
                   mov power5y,ax
+                  jmp anything
             go6:
                   mov di , offset power_up_6  
                   mov ax,curr_power_up_x
                   mov power6x,ax
 
                   mov ax,curr_power_up_y
-                  mov power6y,ax                                              
+                  mov power6y,ax 
+                  jmp anything                                             
            anything:
 
 
@@ -2922,27 +2979,31 @@ erase_power_ups PROC
 
                   mov ax,power3y
                   mov curr_power_up_y,ax
+                  jmp erase_power_up
             er4:
                   mov di , offset power_up_4   
                   mov ax,power4x
                   mov curr_power_up_x,ax
 
                   mov ax,power4y
-                  mov curr_power_up_y,ax  
+                  mov curr_power_up_y,ax
+                  jmp erase_power_up  
             er5:
                   mov di , offset power_up_5   
                   mov ax,power5x
                   mov curr_power_up_x,ax
 
                   mov ax,power5y
-                  mov curr_power_up_y,ax  
+                  mov curr_power_up_y,ax 
+                  jmp erase_power_up 
             er6:
                   mov di , offset power_up_6   
                   mov ax,power6x
                   mov curr_power_up_x,ax
 
                   mov ax,power6y
-                  mov curr_power_up_y,ax                                                
+                  mov curr_power_up_y,ax  
+                  jmp erase_power_up                                              
 
 	erase_power_up:
             add cx,  curr_power_up_x
@@ -3057,7 +3118,7 @@ collect2:
       cmp al ,45
       jz remove2
       cmp al ,46
-      jz remove2
+      jz remove2 
       cmp al ,47
       jz remove2
       cmp al ,48
@@ -3074,7 +3135,7 @@ collect2:
       cmp al ,45
       jz remove2
       cmp al ,46
-      jz remove2
+      jz remove2 
       cmp al ,47
       jz remove2
       cmp al ,48
@@ -3100,7 +3161,6 @@ collect2:
       jz remove2
       cmp al ,50
       jz remove2
-
 ret
 
 remove2: 

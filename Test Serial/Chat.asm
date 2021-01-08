@@ -1,30 +1,29 @@
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;::::::::::::::::::::::::::: Here are the helper macros used in the program :::::::::::::::::::::::::
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;clear the lower half of the screen 
-clear_lower MACRO
-   
-mov ax,060Ch
-mov bh,40h
-mov ch,13     
-mov cl,0        
-mov dh,24    
-mov dl,79 
-int 10h 
-  
-ENDM clear_lower
+; scrroll up by 1 line
+scrolUpper macro 
+    mov ah,6  ; function 6
+    mov al,1  ; scroll by 1 line
+    mov bh,30h  ; normal video attribute
+    mov ch,0  ; upper left Y
+    mov cl,0  ; upper left X
+    mov dh,12 ; lower right Y
+    mov dl,79 ; lower right X
+    int 10h
+endm scrolUpper
 ;-----------------------------------------
-; clear the upper half of the screen
-clear_upper MACRO
-   
-mov ax,060Dh
-mov bh,04h
-mov ch,0       
-mov cl,0       
-mov dh,12    
-mov dl,79
-int 10h 
-ENDM clear_upper 
+; scroll down by 1 line
+scrolDown macro 
+    mov ah,6  ; function 6
+    mov al,1  ; scroll by 1 line
+    mov bh,72h  ; normal video attribute
+    mov ch,13 ; upper left Y
+    mov cl,0  ; upper left X
+    mov dh,24 ; lower right Y
+    mov dl,79 ; lower right X
+    int 10h
+endm scrolDown
 ;-----------------------------------------
 ;         to set the cursor 
 set_cursor MACRO x,y
@@ -77,13 +76,8 @@ main proc far
 
 
 call set_configurations
-   ; change to text mode 
-   mov ah, 0      
-   mov al, 3
-   int 10h
-   
-call split_screenU
-call split_screenL
+call split_screen
+
 
 ; here is the main loop which will detect the current mode
 Send_or_recieve:
@@ -110,13 +104,9 @@ Receive: jmp call_recieve
 ;-----------------------------------------
 	jump_next_line:
 		CMP Y_sending,12               ;check if it is the end of the half screen
-		jz  clear_half                 ; if yes clear the upper half
-		jnz scroll                     ; if no scroll one line 
-        clear_half: clear_upper
-		call split_screenU
-        mov X_sending,0                
-        mov Y_sending,0
-        set_cursor X_sending,Y_sending  ;set the cursor manually to 0,0
+		jz  Scroll_half                 ; if yes scroll up by 1 line
+		jnz scroll                      ; if no jmp to next line 
+        Scroll_half: scrolUpper
         jmp display_char
  
         scroll: inc Y_sending    
@@ -130,12 +120,7 @@ Receive: jmp call_recieve
 
 		Check_y:CMP Y_sending,12           ; if reached the end of the half upper screen
 		JNZ display_char
-		clear_upper
-		call split_screenU
-		mov X_sending,0                    ;set the cursor manually to 0,0 after clearing the screen
-		mov Y_sending,0
-		set_cursor X_sending,Y_sending
-
+		scrolUpper                         ; if yes scroll up one line
 		jmp display_char               
 		
 	display_char: mov ah,2          
@@ -144,7 +129,7 @@ Receive: jmp call_recieve
 
 		; sending is done now
 		mov dx,3FDH 		        ; Line Status Register
-		AGAIN: In al , dx 	        ;Read Line Status
+		In al , dx 	                ;Read Line Status
 		test al , 00100000b         ; if ready for sending
 		jz call_recieve             ; Not empty
 		mov dx , 3F8H		        ; Transmit data register
@@ -184,13 +169,9 @@ Receive: jmp call_recieve
 
 	jump_new_Line_R:
 	cmp Y_receiving,24
-	JZ Clear_half_R
+	JZ Scroll_Down_R
 	jnz Scroll_R
-	Clear_half_R: clear_lower
-	call split_screenL
-	mov X_receiving,0
-	mov Y_receiving,0DH
-	set_cursor X_receiving,Y_receiving
+	Scroll_Down_R: scrolDown
 	jmp Print
 
 	Scroll_R:
@@ -205,12 +186,7 @@ Receive: jmp call_recieve
 
 	Check_y_R: cmp Y_receiving,24
 	jnz Print
-	clear_lower
-	call split_screenL
-	mov X_receiving,0
-	mov Y_receiving,0Dh
-	set_cursor X_receiving,Y_receiving
-
+	scrolDown
 	Print:mov ah,2
 	mov dl,value
 	int 21h
@@ -245,9 +221,14 @@ mov dx,3fbh
 mov al,00011011b
 out dx,al     
 ret
+set_configurations endp 
 ;--------------------------------
 ;--------------------------------
-split_screenU proc
+split_screen proc
+   ; change to text mode 
+   mov ah, 0      
+   mov al, 3
+   int 10h
 
    mov ah,6       ; function 6
    mov al,0       ; scroll by 1 line    
@@ -256,10 +237,8 @@ split_screenU proc
    mov cl,0       ; upper left X =0
    mov dh,12      ; lower right Y= 12
    mov dl,79      ; lower right X = 79
-   int 10h           
-ret
-split_screenL proc
-   ;----------
+   int 10h 
+
    mov ah,6        ; function 6
    mov al,0        ; scroll by 1 line    
    mov bh,72h      ; normal video attribute         
@@ -267,7 +246,8 @@ split_screenL proc
    mov cl,0        ; upper left X = 0
    mov dh,24       ; lower right Y = 24
    mov dl,79       ; lower right X  = 79
-   int 10h   
-   ret   
+   int 10h             
+ret
+split_screen endp 
 ;----------------------------------------
 END MAIN

@@ -1,5 +1,5 @@
 from PIL import Image
-filename = 'spong.jpg'
+filename = 'To Assembly/Track2_widder.bmp'
 im = Image.open(filename)
 pixels = list(im.getdata())
 px = pixels

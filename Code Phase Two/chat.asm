@@ -1,3 +1,5 @@
+PUBLIC CHAT
+
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;::::::::::::::::::::::::::: Here are the helper macros used in the program :::::::::::::::::::::::::
 ;::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -63,14 +65,15 @@ X_sending db 0       ; initially 0
 Y_sending db 0       ; initially 0
 X_receiving db 0     ; initially 0
 Y_receiving db 0Dh   ; initially 0Dh == 13 considered form the half part of the screen                                    
-
+VALUE1 DB 0     ; I WILL MOVE 1 TO THE MASTER AND 0 TO THE SLAVE TO
+VALUE2 DB 0
 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;                             CODE 
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 .CODE
 
-main proc far
+CHAT proc far
      mov ax,@data
      mov ds,ax
 
@@ -196,9 +199,8 @@ Receive: jmp call_recieve
 	jmp Send_or_recieve
 
 exit:
-mov ah, 4ch
-int 21h
-main endp
+ret
+CHAT endp
 ;--------------------------
 set_configurations proc
 ; set divisor latch access bit
@@ -250,4 +252,4 @@ split_screen proc
 ret
 split_screen endp 
 ;----------------------------------------
-END MAIN
+END CHAT
